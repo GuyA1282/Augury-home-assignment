@@ -22,3 +22,13 @@ Why:
 
 Python has no syntax for an "abstract attribute", so I found a pattern that does an abstract
 property in the base class, overridden by a plain class attribute in each subclass.
+
+### Node as an abstract base class
+
+"Node" is also an abstract base class. Every concrete type (AHN2, Cassia, Moxa) defines its
+"hardware_type" and "api_host", since these are the same for every Node of that type.
+
+- "uuid" and "version" are passed to the constructor; "endpoints" starts as an empty list and
+  "last_error" as an empty string (no error), because every new Node starts that way.
+- "ota_channel" is a read-only property derived from the UUID ("OTA_<uuid>"), so it always
+  matches the UUID and cannot be overwritten.
