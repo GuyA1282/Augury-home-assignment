@@ -32,6 +32,13 @@ class Endpoint(ABC):
 	@property
 	def node_uuid(self):
 		return self._node_uuid
+	
+	def drain_backlog(self):
+		self.backlog = 0
+	
+	def start_dfu(self, new_version):
+		if self.backlog == 0 and self.battery >= self.battery_threshold:
+			self._version = new_version
 
 
 class EP1(Endpoint):
@@ -65,7 +72,7 @@ class Node(ABC):
 	def __init__(self, uuid, version):
 		self._uuid = uuid
 		self._version = version
-		self.endpoints = []  # EPs connected to this Node
+		self._endpoints = []  # EPs connected to this Node
 		self._last_error = ""  # if empty = no error
 	
 	@property
@@ -83,6 +90,23 @@ class Node(ABC):
 	@property
 	def last_error(self):
 		return self._last_error
+	
+	@property
+	def endpoints(self):
+		return list(self._endpoints)
+	
+	def add_endpoint(self, ep):
+		if ep.node_uuid != self._uuid:
+			raise ValueError(f"Endpoint {ep.serial_number} belongs to {ep.node_uuid}, not {self._uuid}")
+		self._endpoints.append(ep)
+	
+	def apply_artifact(self, artifact):
+		artifact_parts = artifact[:-4].split("_")
+		artifact_name, artifact_version = artifact_parts[0], artifact_parts[1]
+		if artifact_name.lower() == self.hardware_type.lower():
+			self._version = int(artifact_version)
+		else:
+			self._last_error = f"Artifact {artifact} does not match Node type {self.hardware_type}"
 
 
 class AHN2(Node):

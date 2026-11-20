@@ -37,7 +37,7 @@ property in the base class, overridden by a plain class attribute in each subcla
 
 Fields that must not be changed from outside the class are stored with a
 leading underscore (for example `_version`) and exposed through a
-read-only `@property`.
+read only `@property`.
 
 - **Identity fields** never change after creation: `serial_number` and
   `node_uuid` (Endpoint), `uuid` (Node).
@@ -51,3 +51,24 @@ setter, so `ep.version = 99` raises `AttributeError`. This stops DFU
 gating and OTA artifact validation from being bypassed by assigning a
 value directly. I chose `@property` over `get_x()` methods because it
 is the idiomatic Python way and keeps access simple (`ep.version`).
+
+## Model API (`models.py`)
+
+### Node (AHN2, Cassia, Moxa)
+- `apply_artifact(artifact)`: processes an artifact name such as `moxa_34.swu`.
+  If the hardware type matches the Node (case-insensitive), the version is
+  updated. Otherwise the version stays unchanged and the reason is stored in
+  `last_error`.
+- `add_endpoint(ep)`: links an Endpoint to the Node. Raises `ValueError` if the
+  Endpoint belongs to a different Node.
+- `endpoints`: a copy of the linked Endpoints, so the Node's list cannot be
+  changed from outside.
+- `ota_channel`: the channel name, `OTA_<uuid>`.
+- `uuid`, `version`, `last_error`: read only.
+
+### Endpoint (EP1, EP2, Canary_A)
+- `start_dfu(new_version)`: a single DFU attempt. The version is updated only if
+  `backlog == 0` and `battery >= battery_threshold`; otherwise nothing changes.
+- `drain_backlog()`: simulates the Endpoint uploading its pending samples, so
+  `backlog` becomes 0.
+- `serial_number`, `node_uuid`, `version`: read only.
