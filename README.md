@@ -32,3 +32,22 @@ property in the base class, overridden by a plain class attribute in each subcla
   "last_error" as an empty string (no error), because every new Node starts that way.
 - "ota_channel" is a read-only property derived from the UUID ("OTA_<uuid>"), so it always
   matches the UUID and cannot be overwritten.
+
+## Encapsulation
+
+Fields that must not be changed from outside the class are stored with a
+leading underscore (for example `_version`) and exposed through a
+read-only `@property`.
+
+- **Identity fields** never change after creation: `serial_number` and
+  `node_uuid` (Endpoint), `uuid` (Node).
+- **State fields** change only through the class's own methods, which
+  will enforce the domain rules: `version` (Endpoint and Node) and
+  `last_error` (Node).
+
+Why: Python has no truly private attributes, so the underscore is a
+convention that means "internal, do not touch". The property has no
+setter, so `ep.version = 99` raises `AttributeError`. This stops DFU
+gating and OTA artifact validation from being bypassed by assigning a
+value directly. I chose `@property` over `get_x()` methods because it
+is the idiomatic Python way and keeps access simple (`ep.version`).

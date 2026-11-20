@@ -15,11 +15,23 @@ class Endpoint(ABC):
 		...
 	
 	def __init__(self, serial_number, battery, version, backlog, node_uuid):
-		self.serial_number = serial_number
+		self._serial_number = serial_number
 		self.battery = battery
-		self.version = version
+		self._version = version
 		self.backlog = backlog
-		self.node_uuid = node_uuid
+		self._node_uuid = node_uuid
+	
+	@property
+	def serial_number(self):
+		return self._serial_number
+	
+	@property
+	def version(self):
+		return self._version
+	
+	@property
+	def node_uuid(self):
+		return self._node_uuid
 
 
 class EP1(Endpoint):
@@ -51,14 +63,26 @@ class Node(ABC):
 		...
 	
 	def __init__(self, uuid, version):
-		self.uuid = uuid
-		self.version = version
+		self._uuid = uuid
+		self._version = version
 		self.endpoints = []  # EPs connected to this Node
-		self.last_error = ""  # if empty = no error
+		self._last_error = ""  # if empty = no error
 	
 	@property
 	def ota_channel(self):
 		return f"OTA_{self.uuid}"
+	
+	@property
+	def uuid(self):
+		return self._uuid
+	
+	@property
+	def version(self):
+		return self._version
+	
+	@property
+	def last_error(self):
+		return self._last_error
 
 
 class AHN2(Node):
