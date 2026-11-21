@@ -3,30 +3,30 @@ import models
 nodes = {}  # a dict to save all nodes (uuid : Node object)
 endpoints = {}  # a dict to save all EPs (serial : EP object)
 channels = {}  # a dict to save all the channels (channel name : artifact file name)
-EP_TYPES = {"EP1": models.EP1, "EP2": models.EP2, "Canary_A": models.Canary_A}
-NODE_TYPES = {"AHN2": models.AHN2, "CASSIA": models.Cassia, "MOXA": models.Moxa}
+EP_TYPES = {"EP1":models.EP1, "EP2":models.EP2, "Canary_A":models.Canary_A}
+NODE_TYPES = {"AHN2":models.AHN2, "CASSIA":models.Cassia, "MOXA":models.Moxa}
 
 
 def api_get_endpoint_by_serial(serial_number):
 	ep = endpoints[serial_number]
 	return {
-		"serial_number": ep.serial_number,
-		"battery": ep.battery,
-		"hardware_type": ep.hardware_type,
-		"uuid": ep.node_uuid,
-		"version": ep.version,
-		"backlog": ep.backlog,
+		"serial_number":ep.serial_number,
+		"battery":ep.battery,
+		"hardware_type":ep.hardware_type,
+		"uuid":ep.node_uuid,
+		"version":ep.version,
+		"backlog":ep.backlog,
 	}
 
 
 def api_get_node_by_uuid(uuid):
 	node = nodes[uuid]
 	return {
-		"uuid": node.uuid,
-		"ota_channel": node.ota_channel,
-		"version": node.version,
-		"endpoints": [e.serial_number for e in node.endpoints],
-		"last_error": node.last_error,
+		"uuid":node.uuid,
+		"ota_channel":node.ota_channel,
+		"version":node.version,
+		"endpoints":[e.serial_number for e in node.endpoints],
+		"last_error":node.last_error,
 	}
 
 
@@ -66,10 +66,16 @@ def api_clear_ota_channel(ota_channel, version_artifact):
 		return 200
 	else:
 		return 400
-	
+
 
 def api_reset():
 	nodes.clear()
 	endpoints.clear()
 	channels.clear()
-	
+
+
+def api_poll_ota(uuid):
+	node = nodes[uuid]
+	if node.ota_channel in channels:
+		node.apply_artifact(channels[node.ota_channel])
+		del channels[node.ota_channel]
