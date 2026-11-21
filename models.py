@@ -107,6 +107,7 @@ class Node(ABC):
 		artifact_name, artifact_version = artifact_parts[0], artifact_parts[1]
 		if artifact_name.lower() == self.hardware_type.lower():
 			self._version = int(artifact_version)
+			self._last_error = ""
 		else:
 			self._last_error = f"Artifact {artifact} does not match Node type {self.hardware_type}"
 
