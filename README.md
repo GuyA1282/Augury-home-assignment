@@ -72,3 +72,60 @@ is the idiomatic Python way and keeps access simple (`ep.version`).
 - `drain_backlog()`: simulates the Endpoint uploading its pending samples, so
   `backlog` becomes 0.
 - `serial_number`, `node_uuid`, `version`: read only.
+
+
+## Fake API (`augury_api.py`)
+
+The fake API plays the role of the Augury cloud. Tests (Python or Robot) talk
+only to these functions, using simple values (strings, numbers, dicts), and never
+touch the model objects directly. The domain rules stay in `models.py`; the API
+finds the right object and calls its methods.
+
+### State
+Each API call is independent (Robot calls them one by one), so the objects must
+live somewhere between calls. The API keeps them in module-level dictionaries,
+acting as the backend's storage:
+
+- `nodes`: uuid -> Node
+- `endpoints`: serial number -> Endpoint
+- `channels`: OTA channel name -> the artifact waiting in it (one per channel)
+
+The values are the objects themselves, so all data and rules stay in the model.
+
+### Type lookup
+Tests pass a hardware type as a string (for example `"MOXA"`). `NODE_TYPES` and
+`EP_TYPES` map each type name to its class. Adding a new type means adding one
+line to the dictionary; the create functions do not change (no `if`/`elif` chain).
+
+### Required functions
+- `api_get_endpoint_by_serial(serial_number)`: returns the Endpoint's data as a
+  dict (`serial_number`, `battery`, `hardware_type`, `uuid`, `version`, plus
+  `backlog`).
+- `api_get_node_by_uuid(uuid)`: returns the Node's data as a dict (`uuid`,
+  `ota_channel`, `version`, `endpoints` as a list of serials, plus `last_error`).
+- `api_post_version_to_ota_channel(ota_channel, version_artifact)`: puts the
+  artifact in the channel. Returns 400 if no existing Node owns that channel,
+  otherwise 200. A channel holds one artifact; posting a new one replaces it.
+  Posting does not update the Node: the Node updates only when it polls its channel.
+- `api_clear_ota_channel(ota_channel, version_artifact)`: removes the artifact
+  from the channel. Returns 200 if that artifact was in the channel, otherwise 400.
+
+### Test helpers
+These simulate things that happen on their own in the real system, so the tests
+can set up and drive scenarios. All return 200.
+
+- `api_create_node(node_type, uuid, version)`: simulates a Node being installed
+  and registering with the cloud.
+- `api_create_endpoint(ep_type, serial_number, battery, version, backlog, node_uuid)`:
+  simulates an Endpoint being paired with its Node. It is linked with
+  `add_endpoint` before being stored, so a wrong setup raises `ValueError` and
+  leaves the state unchanged.
+- `api_drain_backlog(serial_number)`: simulates the Endpoint uploading its pending
+  samples (backlog becomes 0).
+- `api_trigger_dfu(serial_number, new_version)`: asks the Endpoint to start a DFU.
+  It always returns 200; the gating rules decide inside the model, and the test
+  checks the version afterwards.
+
+### Errors
+Looking up an unknown uuid or serial raises `KeyError`. This is a setup error in
+the test, not an expected outcome, so it fails loudly.
