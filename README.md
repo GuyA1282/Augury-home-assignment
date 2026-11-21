@@ -186,3 +186,12 @@ OTA channel functions, as the spec defines.
   Node's channel and checks the result; if it never appears, the test fails.
 - Negative tests pass when the system rejects correctly: a bad artifact, a
   deferred DFU, or a post to an unknown channel.
+
+
+## What I would add with more time
+- **Boundary tests for battery thresholds** for each Endpoint type: exactly at the
+  threshold (DFU allowed) and one below it (DFU deferred).
+- **Case-insensitivity tests**: artifacts such as `MOXA_34.swu` and `Moxa_34.swu`.
+- **`last_error` on Endpoints**, so a deferred DFU reports its reason (backlog or
+  battery). Each reason needs a different action: wait for the upload, or charge
+  the battery.
