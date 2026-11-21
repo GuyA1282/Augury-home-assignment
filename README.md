@@ -125,6 +125,8 @@ can set up and drive scenarios. All return 200.
 - `api_trigger_dfu(serial_number, new_version)`: asks the Endpoint to start a DFU.
   It always returns 200; the gating rules decide inside the model, and the test
   checks the version afterwards.
+- - `api_reset()`: clears all Nodes, Endpoints and channels. Used as the Robot
+  test setup, so tests do not depend on each other.
 
 ### Errors
 Looking up an unknown uuid or serial raises `KeyError`. This is a setup error in
