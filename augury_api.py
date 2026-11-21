@@ -35,25 +35,21 @@ def api_create_endpoint(ep_type, serial_number, battery, version, backlog, node_
 	ep = ep_class(serial_number, battery, version, backlog, node_uuid)
 	nodes[node_uuid].add_endpoint(ep)
 	endpoints[serial_number] = ep
-	return 200
 
 
 def api_create_node(node_type, uuid, version):
 	node_class = NODE_TYPES[node_type]
 	nodes[uuid] = node_class(uuid, version)
-	return 200
 
 
 def api_drain_backlog(serial_number):
 	ep = endpoints[serial_number]
 	ep.drain_backlog()
-	return 200
 
 
 def api_trigger_dfu(serial_number, new_version):
 	ep = endpoints[serial_number]
 	ep.start_dfu(new_version)
-	return 200
 
 
 def api_post_version_to_ota_channel(ota_channel, version_artifact):
@@ -70,3 +66,10 @@ def api_clear_ota_channel(ota_channel, version_artifact):
 		return 200
 	else:
 		return 400
+	
+
+def api_reset():
+	nodes.clear()
+	endpoints.clear()
+	channels.clear()
+	
