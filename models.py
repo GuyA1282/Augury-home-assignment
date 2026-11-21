@@ -72,7 +72,7 @@ class Node(ABC):
 	def __init__(self, uuid, version):
 		self._uuid = uuid
 		self._version = version
-		self._endpoints = []  # EPs connected to this Node
+		self._endpoints = {}  # EPs connected to this Node, serial number : EP
 		self._last_error = ""  # if empty = no error
 	
 	@property
@@ -93,12 +93,14 @@ class Node(ABC):
 	
 	@property
 	def endpoints(self):
-		return list(self._endpoints)
+		return list(self._endpoints.values())
 	
 	def add_endpoint(self, ep):
 		if ep.node_uuid != self._uuid:
 			raise ValueError(f"Endpoint {ep.serial_number} belongs to {ep.node_uuid}, not {self._uuid}")
-		self._endpoints.append(ep)
+		if ep.serial_number in self._endpoints:
+			raise ValueError(f"Endpoint {ep.serial_number} is already linked to {self._uuid}")
+		self._endpoints[ep.serial_number] = ep
 	
 	def apply_artifact(self, artifact):
 		artifact_parts = artifact[:-4].split("_")
